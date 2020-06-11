@@ -2,4 +2,4 @@ module github.com/snowlyg/ffmpegTest
 
 go 1.14
 
-require github.com/xfrr/goffmpeg v0.0.0-20200403115021-c3a1545b29f4
+require github.com/giorgisio/goav v0.1.0
