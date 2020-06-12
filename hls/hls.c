@@ -10,6 +10,9 @@ int tohls(){
   int *streams_list = NULL;
   int number_of_streams = 0;
   int fragmented_mp4_options = 0;
+  char *hls_time = "4";
+  char *hls_list_size = "5";
+  char *hls_wrap = "10";
 
   //if (argc < 3) {
   //  printf("You need to pass at least two parameters.\n");
@@ -93,9 +96,9 @@ int tohls(){
   av_dict_set(&opts, "rtsp_transport", "tcp", 0);
   av_dict_set(&opts, "c:v", "copy", 0);
   av_dict_set(&opts, "c:a", "copy", 0);
-  av_dict_set(&opts, "hls_time", "4", 0);
-  av_dict_set(&opts, "hls_list_size", "5", 0);
-  av_dict_set(&opts, "hls_wrap", "10", 0);
+  av_dict_set(&opts, "hls_time",hls_time, 0);
+  av_dict_set(&opts, "hls_list_size", hls_list_size, 0);
+  av_dict_set(&opts, "hls_wrap", hls_wrap, 0);
 
   // https://ffmpeg.org/doxygen/trunk/group__lavf__encoding.html#ga18b7b10bb5b94c4842de18166bc677cb
   ret = avformat_write_header(output_format_context, &opts);
