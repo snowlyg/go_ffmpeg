@@ -1,7 +1,8 @@
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
+#include "hls.h"
 
-int tohls(char *in_filename,char *out_filename){
+int to_hls(const char *in_filename,const char *out_filename){
   AVFormatContext *input_format_context = NULL, *output_format_context = NULL;
   AVPacket packet;
   int ret, i;
@@ -80,18 +81,16 @@ int tohls(char *in_filename,char *out_filename){
       goto end;
     }
   }
-  AVDictionary* opts = NULL;
-
+  AVDictionary *opts = NULL;
   if (fragmented_mp4_options) {
     // https://developer.mozilla.org/en-US/docs/Web/API/Media_Source_Extensions_API/Transcoding_assets_for_MSE
     av_dict_set(&opts, "movflags", "frag_keyframe+empty_moov+default_base_moof", 0);
   }
 
   // 设置参数
-  //-c:v copy -c:a copy -hls_time 4 -hls_list_size 5 -hls_wrap 10
-  av_dict_set(&opts, "rtsp_transport", "tcp", 0);
   av_dict_set(&opts, "c:v", "copy", 0);
   av_dict_set(&opts, "c:a", "copy", 0);
+  av_dict_set(&opts, "rtsp_transport", "tcp", 0);
   av_dict_set(&opts, "hls_time",hls_time, 0);
   av_dict_set(&opts, "hls_list_size", hls_list_size, 0);
   av_dict_set(&opts, "hls_wrap", hls_wrap, 0);
