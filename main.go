@@ -4,165 +4,143 @@ package main
 #cgo CFLAGS: -DPNG_DEBUG=1 -I./ffmpeg/include
 #cgo LDFLAGS: -L${SRCDIR}/ffmpeg/lib -llibavformat -llibavcodec -llibavutil -llibavdevice -llibavfilter -llibswresample -llibswscale
 //#include <stdafx.h>
-#include <libavcodec/avcodec.h>
+#include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
-#include <libavutil/imgutils.h>
-#include <stdio.h>
-
-void SaveFrame(AVFrame *pFrame, int width, int height, int iFrame) {
-    FILE *pFile;
-    char szFilename[32];
-    int  y;
-
-    // Open file
-    sprintf_s(szFilename, "frame%d.ppm", iFrame);
-    fopen_s(&pFile, szFilename, "wb");
-    if (pFile == NULL)
-        return;
-
-    // Write header
-    fprintf(pFile, "P6\n%d %d\n255\n", width, height);
-
-    // Write pixel data
-    for (y = 0; y < height; y++)
-        fwrite(pFrame->data[0] + y*pFrame->linesize[0], 1, width * 3, pFile);
-
-    // Close file
-    fclose(pFile);
-}
 
 void hls()
 {
-   // Initalizing these to NULL prevents segfaults!
-    AVFormatContext   *pFormatCtx = NULL;
-    int               i, videoStream;
-    AVCodecParameters    *pCodecpar = NULL;
-    AVCodecContext    *pCodecCtx = NULL;
-    AVCodec           *pCodec = NULL;
-    AVFrame           *pFrame = NULL;
-    AVFrame           *pFrameRGB = NULL;
-    AVPacket          packet;
-    int               frameFinished;
-    int               numBytes;
-    uint8_t           *buffer = NULL;
-    struct SwsContext *sws_ctx = NULL;
+  AVFormatContext *input_format_context = NULL, *output_format_context = NULL;
+  AVPacket packet;
+  const char *in_filename, *out_filename;
+  int ret, i;
+  int stream_index = 0;
+  int *streams_list = NULL;
+  int number_of_streams = 0;
+  int fragmented_mp4_options = 0;
 
-    // Register all formats and codecs
-    //av_register_all();
-    //debug程序需要将test.flv放在对应的project目录下，跟引用的ffmpeg的dll库同一目录
-    char filepath[] = "rtsp://183.59.168.27/PLTV/88888905/224/3221227255/10000100000000060000000001066420_0.smil?icip=88888888";
-    // Open video file
-    if (avformat_open_input(&pFormatCtx, filepath, NULL, NULL) != 0)
-        return -1; // Couldn't open file
-    // Retrieve stream information
-    if (avformat_find_stream_info(pFormatCtx, NULL) < 0)
-        return -1; // Couldn't find stream information
+  //if (argc < 3) {
+  //  printf("You need to pass at least two parameters.\n");
+  //  return -1;
+  //} else if (argc == 4) {
+  //  fragmented_mp4_options = 1;
+  //}
 
-    // Dump information about file onto standard error
-    av_dump_format(pFormatCtx, 0, filepath, 0);
+  in_filename  ="rtsp://183.59.168.27/PLTV/88888905/224/3221227272/10000100000000060000000001030757_0.smil?icip=88888888";
+  out_filename ="D:/Env/nginx/html/hls/ffmpeg/test.m3u8";
 
-    // Find the first video stream
-    videoStream = -1;
-    for (i = 0; i < pFormatCtx->nb_streams; i++)
-        if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-            videoStream = i;
-            break;
-        }
-    if (videoStream == -1)
-        return -1; // Didn't find a video stream
+  if ((ret = avformat_open_input(&input_format_context, in_filename, NULL, NULL)) < 0) {
+    fprintf(stderr, "Could not open input file '%s'", in_filename);
+    goto end;
+  }
+  if ((ret = avformat_find_stream_info(input_format_context, NULL)) < 0) {
+    fprintf(stderr, "Failed to retrieve input stream information");
+    goto end;
+  }
 
-    // Get a pointer to the codec context for the video stream
-    pCodecpar = pFormatCtx->streams[videoStream]->codecpar;
-    // Find the decoder for the video stream
-    pCodec = avcodec_find_decoder(pFormatCtx->streams[videoStream]->codecpar->codec_id);
-    if (pCodec == NULL) {
-        fprintf(stderr, "Unsupported codec!\n");
-        return -1; // Codec not found
+  avformat_alloc_output_context2(&output_format_context, NULL, NULL, out_filename);
+  if (!output_format_context) {
+    fprintf(stderr, "Could not create output context\n");
+    ret = AVERROR_UNKNOWN;
+    goto end;
+  }
+
+  number_of_streams = input_format_context->nb_streams;
+  streams_list = av_mallocz_array(number_of_streams, sizeof(*streams_list));
+
+  if (!streams_list) {
+    ret = AVERROR(ENOMEM);
+    goto end;
+  }
+
+  for (i = 0; i < input_format_context->nb_streams; i++) {
+    AVStream *out_stream;
+    AVStream *in_stream = input_format_context->streams[i];
+    AVCodecParameters *in_codecpar = in_stream->codecpar;
+    if (in_codecpar->codec_type != AVMEDIA_TYPE_AUDIO &&
+        in_codecpar->codec_type != AVMEDIA_TYPE_VIDEO &&
+        in_codecpar->codec_type != AVMEDIA_TYPE_SUBTITLE) {
+      streams_list[i] = -1;
+      continue;
     }
-
-    // Copy context
-    pCodecCtx = avcodec_alloc_context3(pCodec);
-    if (avcodec_parameters_to_context(pCodecCtx, pCodecpar) != 0) {
-        fprintf(stderr, "Couldn't copy codec context");
-        return -1; // Error copying codec context
+    streams_list[i] = stream_index++;
+    out_stream = avformat_new_stream(output_format_context, NULL);
+    if (!out_stream) {
+      fprintf(stderr, "Failed allocating output stream\n");
+      ret = AVERROR_UNKNOWN;
+      goto end;
     }
-
-    // Open codec
-    if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0)
-        return -1; // Could not open codec
-
-    // Allocate video frame
-    pFrame = av_frame_alloc();
-
-    // Allocate an AVFrame structure
-    pFrameRGB = av_frame_alloc();
-    if (pFrameRGB == NULL)
-        return -1;
-
-    // Determine required buffer size and allocate buffer
-    numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGB24, pCodecCtx->width,
-        pCodecCtx->height, 1);
-    buffer = (uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
-
-    // Assign appropriate parts of buffer to image planes in pFrameRGB
-    // Note that pFrameRGB is an AVFrame, but AVFrame is a superset
-    // of AVPicture
-    av_image_fill_arrays(pFrameRGB->data, pFrameRGB->linesize, buffer, AV_PIX_FMT_RGB24,
-        pCodecCtx->width, pCodecCtx->height, 1);
-
-    // initialize SWS context for software scaling
-    sws_ctx = sws_getContext(pCodecCtx->width,
-        pCodecCtx->height,
-        pCodecCtx->pix_fmt,
-        pCodecCtx->width,
-        pCodecCtx->height,
-        AV_PIX_FMT_RGB24,
-        SWS_BILINEAR,
-        NULL,
-        NULL,
-        NULL
-        );
-
-    // Read frames and save first five frames to disk
-    i = 0;
-    while (av_read_frame(pFormatCtx, &packet) >= 0) {
-        // Is this a packet from the video stream?
-        if (packet.stream_index == videoStream) {
-            // Decode video frame
-            avcodec_send_packet(pCodecCtx, &packet);
-            if (avcodec_receive_frame(pCodecCtx, pFrame) != 0)
-                continue;
-
-            // Convert the image from its native format to RGB
-            sws_scale(sws_ctx, (uint8_t const * const *)pFrame->data,
-                pFrame->linesize, 0, pCodecCtx->height,
-                pFrameRGB->data, pFrameRGB->linesize);
-
-            // Save the frame to disk
-            if (++i <= 10)
-                SaveFrame(pFrameRGB, pCodecCtx->width, pCodecCtx->height, i);
-        }
-
-        // Free the packet that was allocated by av_read_frame
-        av_packet_unref(&packet);
+    ret = avcodec_parameters_copy(out_stream->codecpar, in_codecpar);
+    if (ret < 0) {
+      fprintf(stderr, "Failed to copy codec parameters\n");
+      goto end;
     }
+  }
+  // https://ffmpeg.org/doxygen/trunk/group__lavf__misc.html#gae2645941f2dc779c307eb6314fd39f10
+  av_dump_format(output_format_context, 0, out_filename, 1);
 
-    // Free the RGB image
-    av_free(buffer);
-    av_frame_free(&pFrameRGB);
+  // unless it's a no file (we'll talk later about that) write to the disk (FLAG_WRITE)
+  // but basically it's a way to save the file to a buffer so you can store it
+  // wherever you want.
+  if (!(output_format_context->oformat->flags & AVFMT_NOFILE)) {
+    ret = avio_open(&output_format_context->pb, out_filename, AVIO_FLAG_WRITE);
+    if (ret < 0) {
+      fprintf(stderr, "Could not open output file '%s'", out_filename);
+      goto end;
+    }
+  }
+  AVDictionary* opts = NULL;
 
-    // Free the YUV frame
-    av_frame_free(&pFrame);
+  if (fragmented_mp4_options) {
+    // https://developer.mozilla.org/en-US/docs/Web/API/Media_Source_Extensions_API/Transcoding_assets_for_MSE
+    av_dict_set(&opts, "movflags", "frag_keyframe+empty_moov+default_base_moof", 0);
+  }
+  // https://ffmpeg.org/doxygen/trunk/group__lavf__encoding.html#ga18b7b10bb5b94c4842de18166bc677cb
+  ret = avformat_write_header(output_format_context, &opts);
+  if (ret < 0) {
+    fprintf(stderr, "Error occurred when opening output file\n");
+    goto end;
+  }
+  while (1) {
+    AVStream *in_stream, *out_stream;
+    ret = av_read_frame(input_format_context, &packet);
+    if (ret < 0)
+      break;
+    in_stream  = input_format_context->streams[packet.stream_index];
+    if (packet.stream_index >= number_of_streams || streams_list[packet.stream_index] < 0) {
+      av_packet_unref(&packet);
+      continue;
+    }
+    packet.stream_index = streams_list[packet.stream_index];
+    out_stream = output_format_context->streams[packet.stream_index];
+	packet.pts = av_rescale_q_rnd(packet.pts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+    packet.dts = av_rescale_q_rnd(packet.dts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+    packet.duration = av_rescale_q(packet.duration, in_stream->time_base, out_stream->time_base);
+    // https://ffmpeg.org/doxygen/trunk/structAVPacket.html#ab5793d8195cf4789dfb3913b7a693903
+    packet.pos = -1;
 
-    // Close the codecs
-    avcodec_close(pCodecCtx);
-
-    // Close the video file
-    avformat_close_input(&pFormatCtx);
-
-    return 0;
+    //https://ffmpeg.org/doxygen/trunk/group__lavf__encoding.html#ga37352ed2c63493c38219d935e71db6c1
+    ret = av_interleaved_write_frame(output_format_context, &packet);
+    if (ret < 0) {
+      fprintf(stderr, "Error muxing packet\n");
+      break;
+    }
+    av_packet_unref(&packet);
+  }
+  //https://ffmpeg.org/doxygen/trunk/group__lavf__encoding.html#ga7f14007e7dc8f481f054b21614dfec13
+  av_write_trailer(output_format_context);
+end:
+  avformat_close_input(&input_format_context);
+if (output_format_context && !(output_format_context->oformat->flags & AVFMT_NOFILE))
+    avio_closep(&output_format_context->pb);
+  avformat_free_context(output_format_context);
+  av_freep(&streams_list);
+  if (ret < 0 && ret != AVERROR_EOF) {
+    fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
+    return 1;
+  }
+  return 0;
 }
+
 */
 import "C"
 
@@ -173,32 +151,3 @@ import (
 func main() {
 	fmt.Println(C.hls())
 }
-
-//package main
-//
-//import (
-//	"log"
-//
-//	"github.com/giorgisio/goav/avcodec"
-//	"github.com/giorgisio/goav/avdevice"
-//	"github.com/giorgisio/goav/avfilter"
-//	"github.com/giorgisio/goav/avformat"
-//	"github.com/giorgisio/goav/avutil"
-//	"github.com/giorgisio/goav/swresample"
-//	"github.com/giorgisio/goav/swscale"
-//)
-//
-//func main() {
-//
-//	// Register all formats and codecs
-//	avformat.AvRegisterAll()
-//	avcodec.AvcodecRegisterAll()
-//
-//	log.Printf("AvFilter Version:\t%v", avfilter.AvfilterVersion())
-//	log.Printf("AvDevice Version:\t%v", avdevice.AvdeviceVersion())
-//	log.Printf("SWScale Version:\t%v", swscale.SwscaleVersion())
-//	log.Printf("AvUtil Version:\t%v", avutil.AvutilVersion())
-//	log.Printf("AvCodec Version:\t%v", avcodec.AvcodecVersion())
-//	log.Printf("Resample Version:\t%v", swresample.SwresampleLicense())
-//
-//}
