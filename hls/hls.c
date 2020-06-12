@@ -1,10 +1,9 @@
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
 
-int tohls(){
+int tohls(char *in_filename,char *out_filename){
   AVFormatContext *input_format_context = NULL, *output_format_context = NULL;
   AVPacket packet;
-  const char *in_filename, *out_filename;
   int ret, i;
   int stream_index = 0;
   int *streams_list = NULL;
@@ -20,9 +19,6 @@ int tohls(){
   //} else if (argc == 4) {
   //  fragmented_mp4_options = 1;
   //}
-
-  in_filename  ="rtsp://183.59.168.27/PLTV/88888905/224/3221227272/10000100000000060000000001030757_0.smil?icip=88888888";
-  out_filename ="D:/Env/nginx/html/hls/ffmpeg/test.m3u8";
 
   if ((ret = avformat_open_input(&input_format_context, in_filename, NULL, NULL)) < 0) {
     fprintf(stderr, "Could not open input file '%s'", in_filename);
