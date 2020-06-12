@@ -1,8 +1,8 @@
 package main
 
 /*
-#cgo CFLAGS: -DPNG_DEBUG=1 -I./ffmpeg/include -I./hls
-#cgo LDFLAGS: -L./ffmpeg/lib -llibavformat -llibavcodec -llibavutil -llibavdevice -llibavfilter -llibswresample -llibswscale -L./hls
+#cgo CFLAGS: -DPNG_DEBUG=1 -I./ffmpeg/include_win -I./hls
+#cgo LDFLAGS: -L./ffmpeg/lib_win -llibavformat -llibavcodec -llibavutil -llibavdevice -llibavfilter -llibswresample -llibswscale -L./hls
 #include <hls.h>
 */
 import "C"
