@@ -1,4 +1,4 @@
-package main
+package ffmpegTest
 
 /*
 #cgo CFLAGS: -DPNG_DEBUG=1 -I./ffmpeg/include
