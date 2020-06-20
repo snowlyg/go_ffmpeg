@@ -1,6 +1,10 @@
+package ffmpegTest
+
+/*
+#cgo CFLAGS: -DPNG_DEBUG=1 -I./ffmpeg/include
+#cgo LDFLAGS: -L./ffmpeg/lib -llibavformat -llibavcodec -llibavutil -llibavdevice -llibavfilter -llibswresample -llibswscale
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
-#include "hls.h"
 
 int to_hls(const char *in_filename,const char *out_filename){
   AVFormatContext *input_format_context = NULL, *output_format_context = NULL;
@@ -142,4 +146,13 @@ if (output_format_context && !(output_format_context->oformat->flags & AVFMT_NOF
     return 1;
   }
   return 0;
+}
+*/
+import "C"
+
+//	inFilename := "rtsp://183.59.168.27/PLTV/88888905/224/3221227272/10000100000000060000000001030757_0.smil?icip=88888888"
+//	outFilename := "D:/Env/nginx/html/hls/ffmpeg/test.m3u8"
+func ToHls(inFilename, outFilename string) {
+	outFilename = outFilename + "/out.m3u8"
+	C.to_hls(C.CString(inFilename), C.CString(outFilename))
 }
