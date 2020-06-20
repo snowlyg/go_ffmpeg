@@ -5,7 +5,7 @@ package ffmpegTest
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
 
-int to_hls(const char *in_filename,const char *out_filename){
+int to_hls(const char *in_filename,const char *out_filename,const char *rtsp_transport){
   AVFormatContext *input_format_context = NULL, *output_format_context = NULL;
   AVPacket packet;
   int ret, i;
@@ -93,7 +93,7 @@ int to_hls(const char *in_filename,const char *out_filename){
   // 设置参数
   av_dict_set(&opts, "c:v", "copy", 0);
   av_dict_set(&opts, "c:a", "copy", 0);
-  av_dict_set(&opts, "rtsp_transport", "tcp", 0);
+  av_dict_set(&opts, "rtsp_transport", rtsp_transport, 0);
   av_dict_set(&opts, "hls_time",hls_time, 0);
   av_dict_set(&opts, "hls_list_size", hls_list_size, 0);
   av_dict_set(&opts, "hls_wrap", hls_wrap, 0);
@@ -152,7 +152,7 @@ import "os"
 
 //	inFilename := "rtsp://183.59.168.27/PLTV/88888905/224/3221227272/10000100000000060000000001030757_0.smil?icip=88888888"
 //	outFilename := "D:/Env/nginx/html/hls/ffmpeg/test.m3u8"
-func ToHls(inFilename, outFilename string) {
+func ToHls(inFilename, outFilename, rtspTransport string) {
 	outFilename = outFilename + "/out.m3u8"
 
 	err := CreateFile(outFilename)
@@ -160,7 +160,7 @@ func ToHls(inFilename, outFilename string) {
 		panic(err)
 	}
 
-	C.to_hls(C.CString(inFilename), C.CString(outFilename))
+	C.to_hls(C.CString(inFilename), C.CString(outFilename), C.CString(rtspTransport))
 }
 
 // 调用os.MkdirAll递归创建文件夹
