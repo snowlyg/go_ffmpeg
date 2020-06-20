@@ -1,8 +1,7 @@
 package ffmpegTest
 
 /*
-#cgo CFLAGS: -DPNG_DEBUG=1 -I./ffmpeg/include
-#cgo LDFLAGS: -L./ffmpeg/lib -llibavformat -llibavcodec -llibavutil -llibavdevice -llibavfilter -llibswresample -llibswscale
+#cgo pkg-config:  libavformat  libavutil
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
 
