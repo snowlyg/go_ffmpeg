@@ -148,10 +148,38 @@ if (output_format_context && !(output_format_context->oformat->flags & AVFMT_NOF
 }
 */
 import "C"
+import "os"
 
 //	inFilename := "rtsp://183.59.168.27/PLTV/88888905/224/3221227272/10000100000000060000000001030757_0.smil?icip=88888888"
 //	outFilename := "D:/Env/nginx/html/hls/ffmpeg/test.m3u8"
 func ToHls(inFilename, outFilename string) {
 	outFilename = outFilename + "/out.m3u8"
+
+	err := CreateFile(outFilename)
+	if err != nil {
+		panic(err)
+	}
+
 	C.to_hls(C.CString(inFilename), C.CString(outFilename))
+}
+
+// 调用os.MkdirAll递归创建文件夹
+func CreateFile(filePath string) error {
+	if !IsExist(filePath) {
+		err := os.MkdirAll(filePath, os.ModePerm)
+		return err
+	}
+	return nil
+}
+
+//  判断所给路径文件/文件夹是否存在(返回true是存在)
+func IsExist(path string) bool {
+	_, err := os.Stat(path) // os.Stat获取文件信息
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
+	return true
 }
