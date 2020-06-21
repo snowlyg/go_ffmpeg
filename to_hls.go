@@ -119,7 +119,9 @@ int to_hls(const char *in_filename,const char *out_filename,const char *rtsp_tra
     out_stream = output_format_context->streams[packet.stream_index];
 	packet.pts = av_rescale_q_rnd(packet.pts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
     packet.dts = av_rescale_q_rnd(packet.dts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
-    packet.duration = av_rescale_q(packet.duration, in_stream->time_base, out_stream->time_base);
+    if(packet.pts < packet.dts) continue;
+
+	packet.duration = av_rescale_q(packet.duration, in_stream->time_base, out_stream->time_base);
     // https://ffmpeg.org/doxygen/trunk/structAVPacket.html#ab5793d8195cf4789dfb3913b7a693903
     packet.pos = -1;
 
