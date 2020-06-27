@@ -1,7 +1,7 @@
 package ffmpegTest
 
 /*
-#cgo pkg-config:  libavformat  libavutil
+#cgo pkg-config:  libavformat  libavutil libavcodec libswscale libswresample libavdevice libavfilter
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
 
