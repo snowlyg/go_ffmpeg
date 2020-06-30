@@ -14,3 +14,5 @@
 # vendor/
 
 .idea
+
+go_ffmpeg

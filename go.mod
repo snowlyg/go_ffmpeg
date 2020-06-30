@@ -1,3 +1,3 @@
-module github.com/snowlyg/ffmpegTest
+module github.com/snowlyg/go_ffmpeg
 
 go 1.14
