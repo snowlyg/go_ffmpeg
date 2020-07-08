@@ -10,9 +10,8 @@ int to_hls( char *in_filename,char *out_filename,char *rtsp_transport){
   int *streams_list = NULL;
   int number_of_streams = 0;
   int fragmented_mp4_options = 0;
-  char *hls_time = "4";
+  char *hls_time = "2";
   char *hls_list_size = "5";
-  char *hls_wrap = "10";
 
   //if (argc < 3) {
   //  printf("You need to pass at least two parameters.\n");
@@ -93,9 +92,7 @@ int to_hls( char *in_filename,char *out_filename,char *rtsp_transport){
   av_dict_set(&opts, "rtsp_transport", rtsp_transport, 0);
   av_dict_set(&opts, "hls_time",hls_time, 0);
   av_dict_set(&opts, "hls_list_size", hls_list_size, 0);
-  av_dict_set(&opts, "hls_wrap", hls_wrap, 0);
-  av_dict_set(&opts, "video_track_timescale", "15360", 0);
-  av_dict_set(&opts, "avoid_negative_ts", "make_zero", 0);
+  av_dict_set(&opts, "hls_flags", "delete_segments", 0);
 
   // https://ffmpeg.org/doxygen/trunk/group__lavf__encoding.html#ga18b7b10bb5b94c4842de18166bc677cb
   ret = avformat_write_header(output_format_context, &opts);

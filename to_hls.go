@@ -7,25 +7,46 @@ package go_ffmpeg
 import "C"
 import "os"
 
+type rtspTransport int
+
+const (
+	_TCP rtspTransport = iota
+	_UDP
+)
+
+func (r rtspTransport) String() string {
+	switch r {
+	case _TCP:
+		return "tcp"
+	case _UDP:
+		return "udp"
+	default:
+		return "tcp"
+	}
+}
+
+type Hls struct {
+	InFilename    string
+	OutFilename   string
+	RtspTransport rtspTransport
+}
+
 //	养鸡rtsp回放：rtsp://www.mym9.com/101065?from=2019-06-28/01:12:13
 //	rtmp://58.200.131.2:1935/livetv/hunantv
 //	inFilename := "rtsp://183.59.168.27/PLTV/88888905/224/3221227272/10000100000000060000000001030757_0.smil?icip=88888888"
 //	outFilename := "D:/Env/nginx/html/hls/ffmpeg/test.m3u8"
 //	rtspTransport := "tcp"
-//func main() {
-//	inFilename := "rtsp://www.mym9.com/101065?from=2019-06-28/01:12:13"
-//	outFilename := "./hls_files"
-//	rtspTransport := "tcp"
-func ToHls(inFilename, outFilename, rtspTransport string) {
 
-	err := CreateFile(outFilename)
+func (h *Hls) ToHls() {
+
+	err := CreateFile(h.OutFilename)
 	if err != nil {
 		panic(err)
 	}
 
-	outFilename = outFilename + "/out.m3u8"
+	outFilename := h.OutFilename + "/out.m3u8"
 
-	C.to_hls(C.CString(inFilename), C.CString(outFilename), C.CString(rtspTransport))
+	C.to_hls(C.CString(h.InFilename), C.CString(outFilename), C.CString(h.RtspTransport.String()))
 }
 
 // 调用os.MkdirAll递归创建文件夹
@@ -48,3 +69,16 @@ func IsExist(path string) bool {
 	}
 	return true
 }
+
+//func main() {
+//	inFilename := "rtsp://www.mym9.com/101065?from=2019-06-28/01:12:13"
+//	outFilename := "./hls_files"
+//	rtspTransport := "tcp"
+//
+//	hls := Hls{
+//		InFilename: "rtsp://www.mym9.com/101065?from=2019-06-28/01:12:13",
+//		OutFilename: "./hls_files",
+//	}
+//
+//	hls.ToHls()
+//}
