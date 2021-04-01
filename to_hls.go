@@ -1,24 +1,48 @@
+/**
+* useage case
+* package main
+*
+* import "github.com/snowlyg/go_ffmpeg"
+*
+* func main() {
+*
+* 	inFilename := "rtsp://www.mym9.com/101065?from=2019-06-28/01:12:13"
+* 	outFilename := "./hls_files"
+*
+* 	hls := go_ffmpeg.Hls{
+* 		InFilename:    inFilename,
+* 		OutFilename:   outFilename,
+* 		RtspTransport: go_ffmpeg.TCP,
+* 	}
+*
+* 	hls.ToHls()
+* }
+**/
+
 package go_ffmpeg
 
 /*
-#cgo pkg-config:  libavformat  libavutil libavcodec libswscale libswresample libavdevice libavfilter
+#cgo pkg-config: libavformat  libavutil libavcodec libswscale libswresample libavdevice libavfilter
 #include <hls/hls.c>
 */
 import "C"
-import "os"
-
-type rtspTransport int
-
-const (
-	_TCP rtspTransport = iota
-	_UDP
+import (
+	"fmt"
+	"os"
 )
 
-func (r rtspTransport) String() string {
+type RtspTransport int
+
+const (
+	TCP RtspTransport = iota
+	UDP
+)
+
+func (r RtspTransport) String() string {
 	switch r {
-	case _TCP:
+	case TCP:
 		return "tcp"
-	case _UDP:
+	case UDP:
 		return "udp"
 	default:
 		return "tcp"
@@ -28,7 +52,9 @@ func (r rtspTransport) String() string {
 type Hls struct {
 	InFilename    string
 	OutFilename   string
-	RtspTransport rtspTransport
+	HlsTime       string
+	HlsListSize   string
+	RtspTransport RtspTransport
 }
 
 //	养鸡rtsp回放：rtsp://www.mym9.com/101065?from=2019-06-28/01:12:13
@@ -37,19 +63,18 @@ type Hls struct {
 //	outFilename := "D:/Env/nginx/html/hls/ffmpeg/test.m3u8"
 //	rtspTransport := "tcp"
 
-func (h *Hls) ToHls() {
-
+func (h *Hls) ToHls() error {
 	err := CreateFile(h.OutFilename)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("create file %w", err)
 	}
-
 	outFilename := h.OutFilename + "/out.m3u8"
+	C.to_hls(C.CString(h.InFilename), C.CString(outFilename), C.CString(h.RtspTransport.String()), C.CString(h.HlsTime), C.CString(HlsListSize))
 
-	C.to_hls(C.CString(h.InFilename), C.CString(outFilename), C.CString(h.RtspTransport.String()))
+	return nil
 }
 
-// 调用os.MkdirAll递归创建文件夹
+// CreateFile 调用os.MkdirAll递归创建文件夹
 func CreateFile(filePath string) error {
 	if !IsExist(filePath) {
 		err := os.MkdirAll(filePath, os.ModePerm)
@@ -58,27 +83,11 @@ func CreateFile(filePath string) error {
 	return nil
 }
 
-//  判断所给路径文件/文件夹是否存在(返回true是存在)
+// IsExist  判断所给路径文件/文件夹是否存在(返回true是存在)
 func IsExist(path string) bool {
 	_, err := os.Stat(path) // os.Stat获取文件信息
 	if err != nil {
-		if os.IsExist(err) {
-			return true
-		}
-		return false
+		return os.IsExist(err)
 	}
 	return true
 }
-
-//func main() {
-//	inFilename := "rtsp://www.mym9.com/101065?from=2019-06-28/01:12:13"
-//	outFilename := "./hls_files"
-//	rtspTransport := "tcp"
-//
-//	hls := Hls{
-//		InFilename: "rtsp://www.mym9.com/101065?from=2019-06-28/01:12:13",
-//		OutFilename: "./hls_files",
-//	}
-//
-//	hls.ToHls()
-//}
