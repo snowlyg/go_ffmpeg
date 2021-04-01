@@ -3,6 +3,8 @@
 *.exe~
 *.so
 *.dylib
+*.ts
+*.m3u8
 
 # Test binary, built with `go test -c`
 *.test
@@ -13,6 +15,7 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-.idea
+hls_files/
+.idea/
 
 go_ffmpeg
