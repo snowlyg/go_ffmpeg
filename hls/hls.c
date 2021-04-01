@@ -28,7 +28,7 @@ int to_hls(char *in_filename, char *out_filename, char *rtsp_transport, char *hl
   // 设置参数
   av_dict_set(&opts, "rtsp_transport", rtsp_transport, 0);
 
-  if ((ret = avformat_open_input(&ifmt_ctx, in_filename, 0, opts)) < 0)
+  if ((ret = avformat_open_input(&ifmt_ctx, in_filename, 0, &opts)) < 0)
   {
     fprintf(stderr, "Could not open input file '%s'", in_filename);
     goto end;
@@ -100,7 +100,7 @@ int to_hls(char *in_filename, char *out_filename, char *rtsp_transport, char *hl
   av_dict_set(&opts_out, "hls_list_size", hls_list_size, 0);
   av_dict_set(&opts_out, "hls_flags", "delete_segments", 0);
   
-  ret = avformat_write_header(ofmt_ctx, opts_out);
+  ret = avformat_write_header(ofmt_ctx, &opts_out);
   if (ret < 0)
   {
     fprintf(stderr, "Error occurred when opening output file\n");

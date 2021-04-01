@@ -6,12 +6,9 @@
 *
 * func main() {
 *
-* 	inFilename := "rtsp://www.mym9.com/101065?from=2019-06-28/01:12:13"
-* 	outFilename := "./hls_files"
-*
 * 	hls := go_ffmpeg.Hls{
-* 		InFilename:    inFilename,
-* 		OutFilename:   outFilename,
+* 		InFilename:    "rtsp://www.mym9.com/101065?from=2019-06-28/01:12:13",
+* 		OutFilename:   "./hls_files",
 * 		RtspTransport: go_ffmpeg.TCP,
 * 	}
 *
@@ -69,7 +66,7 @@ func (h *Hls) ToHls() error {
 		return fmt.Errorf("create file %w", err)
 	}
 	outFilename := h.OutFilename + "/out.m3u8"
-	C.to_hls(C.CString(h.InFilename), C.CString(outFilename), C.CString(h.RtspTransport.String()), C.CString(h.HlsTime), C.CString(HlsListSize))
+	C.to_hls(C.CString(h.InFilename), C.CString(outFilename), C.CString(h.RtspTransport.String()), C.CString(h.HlsTime), C.CString(h.HlsListSize))
 
 	return nil
 }
