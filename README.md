@@ -44,4 +44,24 @@ export CGO_CFLAGS="-I/usr/local/Cellar/ffmpeg/4.3_1/include"
 
 ```
 
+```shell script
+# rpm for centos7
+# https://rpmfind.net/linux/rpm2html/search.php?query=ffmpeg-devel
+# https://centos.pkgs.org/7/okey-x86_64/ffmpeg-devel-3.2.4-1.el7.centos.x86_64.rpm.html
+# http://ftp.pbone.net/mirror/ftp5.gwdg.de/pub/opensuse/repositories/home:/SocMinarch:/ffmpeg/CentOS_7/x86_64/
+# https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7/
+
+sudo apt-get -y install autoconf automake build-essential libass-dev libfreetype6-dev libsdl1.2-dev libtheora-dev libtool libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev pkg-config texi2html zlib1g-dev
+
+sudo apt install -y libavdevice-dev libavfilter-dev libswscale-dev libavcodec-dev libavformat-dev libswresample-dev libavutil-dev
+
+sudo apt-get install yasm
+
+export FFMPEG_ROOT=$HOME/ffmpeg
+export CGO_LDFLAGS="-L$FFMPEG_ROOT/lib/ -lavcodec -lavformat -lavutil -lswscale -lswresample -lavdevice -lavfilter"
+export CGO_CFLAGS="-I$FFMPEG_ROOT/include"
+export LD_LIBRARY_PATH="$FFMPEG_ROOT/lib"
+```
+
+
 ![cctv9.png](cctv9.png)
