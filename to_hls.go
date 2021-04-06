@@ -19,7 +19,8 @@
 package go_ffmpeg
 
 /*
-#cgo pkg-config: libavformat  libavutil libavcodec libswscale libswresample libavdevice libavfilter
+#cgo CFLAGS: -ID:/Strawberry/c/include/ffmpeg/include/
+#cgo LDFLAGS: -LD:/Strawberry/c/include/ffmpeg/lib/ -lswscale  -lavcodec -lavformat -lavutil -lswresample -lavdevice -lavfilter
 #include <hls/hls.c>
 */
 import "C"

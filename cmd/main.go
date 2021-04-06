@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/snowlyg/go_ffmpeg"
@@ -16,18 +17,26 @@ func main() {
 		return
 	}
 
-	go hls()
+	go hls(os.Args[1], os.Args[2], os.Args[3], os.Args[4])
 	go startHTTP()
 
 	select {}
 }
 
-func hls() {
+func hls(in, out, ht, hl string) {
+	if ht == "" {
+		ht = "2"
+	}
+
+	if hl == "" {
+		hl = "5"
+	}
+
 	hls := &go_ffmpeg.Hls{
-		InFilename:  "rtsp://admin:P@ssw0rd@10.0.0.10:554/Streaming/Channels/102",
-		OutFilename: "./hls_files",
-		HlsTime:     "2",
-		HlsListSize: "5",
+		InFilename:  in,
+		OutFilename: out,
+		HlsTime:     ht,
+		HlsListSize: hl,
 	}
 
 	err := hls.ToHls()
