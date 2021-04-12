@@ -98,7 +98,7 @@ int to_hls(char *in_filename, char *out_filename, char *rtsp_transport, char *hl
   av_dict_set(&opts_out, "c:a", "copy", 0);
   av_dict_set(&opts_out, "hls_time", hls_time, 0);
   av_dict_set(&opts_out, "hls_list_size", hls_list_size, 0);
-  av_dict_set(&opts_out, "hls_flags", "delete_segments", 0);
+  av_dict_set(&opts_out, "hls_wrap", hls_list_size, 0);
   
   ret = avformat_write_header(ofmt_ctx, &opts_out);
   if (ret < 0)
