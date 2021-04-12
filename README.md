@@ -1,12 +1,11 @@
 # go_ffmpeg
-尝试直接调用 ffmpeg 动态库函数,生成 hls 文件. 目前支持 windows 环境， 其他环境需要自行安装相关依赖库
+本库尝试使用 `go` 直接调用 ffmpeg 动态库函数,生成 hls 文件.
 
-##### 参考资料
-[https://github.com/leandromoreira/ffmpeg-libav-tutorial#learn-ffmpeg-libav-the-hard-way](https://github.com/leandromoreira/ffmpeg-libav-tutorial#learn-ffmpeg-libav-the-hard-way)
+#### 程序依赖
+- gcc 因为需要调用 ffmpeg 的依赖库，需要通过 `cgo` 调用。
+- ffmpeg(4.0+) 或者 ffmepg 依赖库(4.0+)
 
-##### 使用方法
-- 复制所有 dll 到项目根目录下
-- example
+##### 使用
 ```go
 package main
 
@@ -22,46 +21,40 @@ func main() {
 }   
 
 ```
+更多使用示例，参考 [example](./example) 。
 
-#### `ffmpeg` 推流 
-- 因为资源地址是电信地址，移动宽带可能会出现无法播放的情况。
-- 通过 `cgo` 直接调用 `ffmpeg C++ Api` 的方式实现转码视频流,生成 `.m3u8` 文件到 `hls` 目录下。
-- 配置文件增加了 `recordpath: D:\Env\nginx\html\hls\cctv1` 选项，需要配置绝对路径
-- 启动项目后将地址 `http://127.0.0.1:8085/record/out.m3u8` 在 `vlc` 播放器打开即可播放中央9台。
+#### 下载 `ffmpeg` 及相关依赖
 
-#### 配置 `ffmpeg api` 库支持,增加系统变量
-- 需要安装 `pkg-config`。 [windows pkg-config 环境下载地址](https://www.jianshu.com/p/d060030ef2a2), `mac/linux` 直接命令安装即可。
 
-- `windows` 环境：可以到 [github.com/snowlyg/ffmpegTest](github.com/snowlyg/ffmpegTest) 复制相关依赖步骤如下：
-- 配置 PKG_CONFIG_PATH 系统变量，复制 lib/include 目录到环境变量配置的路径中。
-- 复制项目根目录下的 `.pc` 文件到 `PKG_CONFIG_PATH` 路径中，将里面 lib 和 include 目录路径修改为你的 `PKG_CONFIG_PATH` 路径。
-- 最后还需要把 `dll` 目录下的所有 `dll` 文件复制到项目目录下。 
+- `windows` 环境: 到 [https://github.com/BtbN/FFmpeg-Builds/releases](https://github.com/BtbN/FFmpeg-Builds/releases) 下载 `ffmpeg` 依赖库文件。 
+- 
 
-- `mac/linux` 环境：请配置系统变量
-```shell script
-export CGO_LDFLAGS="-L/usr/local/Cellar/ffmpeg/4.3_1/lib/ -lavcodec -lavformat -lavutil -lswscale -lswresample -lavdevice -lavfilter"
-export CGO_CFLAGS="-I/usr/local/Cellar/ffmpeg/4.3_1/include"
-
+- `mac` 环境: 
+```shell
+ brew install ffmpeg
 ```
 
-```shell script
-# rpm for centos7
-# https://rpmfind.net/linux/rpm2html/search.php?query=ffmpeg-devel
-# https://centos.pkgs.org/7/okey-x86_64/ffmpeg-devel-3.2.4-1.el7.centos.x86_64.rpm.html
-# http://ftp.pbone.net/mirror/ftp5.gwdg.de/pub/opensuse/repositories/home:/SocMinarch:/ffmpeg/CentOS_7/x86_64/
-# https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7/
-
-sudo apt-get -y install autoconf automake build-essential libass-dev libfreetype6-dev libsdl1.2-dev libtheora-dev libtool libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev pkg-config texi2html zlib1g-dev
-
+- `ubuntu` 环境: 
+```shell
 sudo apt install -y libavdevice-dev libavfilter-dev libswscale-dev libavcodec-dev libavformat-dev libswresample-dev libavutil-dev
+``` 
 
-sudo apt-get install yasm
+- `centos7` 环境: 
+- [https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7/](https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7)
 
-export FFMPEG_ROOT=$HOME/ffmpeg
-export CGO_LDFLAGS="-L$FFMPEG_ROOT/lib/ -lavcodec -lavformat -lavutil -lswscale -lswresample -lavdevice -lavfilter"
-export CGO_CFLAGS="-I$FFMPEG_ROOT/include"
-export LD_LIBRARY_PATH="$FFMPEG_ROOT/lib"
-```
+#### 配置 `cgo`
+- 修改 [chls.go](src/chls.go) 文件，将 `#cgo CFLAGS: -I` 和 `cgo LDFLAGS: -L` 修改为前面依赖库的安装地址。
+- `windows` 环境需要将 `dll` 文件复制到程序的执行目录
 
 
 ![cctv9.png](cctv9.png)
+
+
+##### 参考资料
+- [https://github.com/leandromoreira/ffmpeg-libav-tutorial#learn-ffmpeg-libav-the-hard-way](https://github.com/leandromoreira/ffmpeg-libav-tutorial#learn-ffmpeg-libav-the-hard-way)
+
+- [https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7](https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7)
+
+- [https://www.cnblogs.com/wanggang123/p/10302023.html](https://www.cnblogs.com/wanggang123/p/10302023.html)
+
+- [http://www.chungen90.com/?news_34/](http://www.chungen90.com/?news_34/)
