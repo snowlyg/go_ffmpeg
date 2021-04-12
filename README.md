@@ -25,9 +25,7 @@ func main() {
 
 #### 下载 `ffmpeg` 及相关依赖
 
-
 - `windows` 环境: 到 [https://github.com/BtbN/FFmpeg-Builds/releases](https://github.com/BtbN/FFmpeg-Builds/releases) 下载 `ffmpeg` 依赖库文件。 
-- 
 
 - `mac` 环境: 
 ```shell
@@ -40,7 +38,7 @@ sudo apt install -y libavdevice-dev libavfilter-dev libswscale-dev libavcodec-de
 ``` 
 
 - `centos7` 环境: 
-- [https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7/](https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7)
+  - [https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7/](https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7)
 
 #### 配置 `cgo`
 - 修改 [chls.go](src/chls.go) 文件，将 `#cgo CFLAGS: -I` 和 `cgo LDFLAGS: -L` 修改为前面依赖库的安装地址。
@@ -51,6 +49,7 @@ sudo apt install -y libavdevice-dev libavfilter-dev libswscale-dev libavcodec-de
 
 
 ##### 参考资料
+
 - [https://github.com/leandromoreira/ffmpeg-libav-tutorial#learn-ffmpeg-libav-the-hard-way](https://github.com/leandromoreira/ffmpeg-libav-tutorial#learn-ffmpeg-libav-the-hard-way)
 
 - [https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7](https://linuxize.com/post/how-to-install-ffmpeg-on-centos-7)
@@ -58,3 +57,5 @@ sudo apt install -y libavdevice-dev libavfilter-dev libswscale-dev libavcodec-de
 - [https://www.cnblogs.com/wanggang123/p/10302023.html](https://www.cnblogs.com/wanggang123/p/10302023.html)
 
 - [http://www.chungen90.com/?news_34/](http://www.chungen90.com/?news_34/)
+  
+- [CGO编程](https://books.studygolang.com/advanced-go-programming-book/ch2-cgo/ch2-01-hello-cgo.html)
